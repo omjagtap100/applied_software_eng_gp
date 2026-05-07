@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-
+const Organization = require("../models/organization.model");
 const CREATE_KEYS = ["name", "email", "password", "role"];
 
 function buildError(message, statusCode) {
@@ -62,8 +62,15 @@ async function login(payload, jwtSecret) {
     { expiresIn: "24h" }
   );
 }
-
+async function createOrganization(userId, payload) {
+  const { name, description, category, address, contactEmail } = payload;
+  if (!name || !description || !category || !address || !contactEmail) {
+    throw buildError("name, description, category, address, contactEmail are required", 400);
+  }
+  return Organization.create({ name, description, category, address, contactEmail, managerUserId: userId, status: "Pending" });
+}
 module.exports = {
   register,
-  login
+  login,
+    createOrganization
 }

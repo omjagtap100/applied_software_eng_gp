@@ -18,3 +18,11 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+exports.createOrganization = async (req, res, next) => {
+  try {
+    const out = await authService.createOrganization(req.user.id, req.body || {});
+    res.status(201).json(out);
+  } catch (error) {
+    next(error);
+  }
+};
