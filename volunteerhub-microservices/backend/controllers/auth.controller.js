@@ -26,3 +26,29 @@ exports.createOrganization = async (req, res, next) => {
     next(error);
   }
 };
+exports.reviewOrganization = async (req, res, next) => {
+  try {
+    const out = await authService.reviewOrganization(req.params.id, req.body?.status);
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateOrganization = async (req, res, next) => {
+  try {
+    const out = await authService.updateOrganization(req.params.id, req.user.id, req.body || {});
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getOrganizations = async (_req, res, next) => {
+  try {
+    const out = await authService.getOrganizations();
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};

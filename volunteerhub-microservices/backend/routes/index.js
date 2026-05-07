@@ -13,6 +13,19 @@ authRouter.post(
   requireRole(["OrganisationManager"]),
   Controllers.authController.createOrganization
 );
+authRouter.get("/organizations", requireAuth, Controllers.authController.getOrganizations);
+authRouter.patch(
+  "/organizations/:id/review",
+  requireAuth,
+  requireRole(["Admin"]),
+  Controllers.authController.reviewOrganization
+);
+authRouter.put(
+  "/organizations/:id",
+  requireAuth,
+  requireRole(["OrganisationManager"]),
+  Controllers.authController.updateOrganization
+);
 const apiRouter = express.Router();
 apiRouter.use("/auth", authRouter);
 module.exports = apiRouter; 

@@ -69,8 +69,35 @@ async function createOrganization(userId, payload) {
   }
   return Organization.create({ name, description, category, address, contactEmail, managerUserId: userId, status: "Pending" });
 }
+async function reviewOrganization(orgId, status) {
+  if (!["Approved", "Rejected"].includes(status)) throw buildError("status must be Approved or Rejected", 400);
+  const updated = await Organization.findByIdAndUpdate(orgId, { status }, { new: true }).lean();
+  if (!updated) throw buildError("Organization not found", 404);
+  return updated;
+}
+
+async function updateOrganization(orgId, userId, payload) {
+  const org = await Organization.findById(orgId);
+  if (!org) throw buildError("Organization not found", 404);
+  if (String(org.managerUserId) !== String(userId)) throw buildError("Forbidden for this organization", 403);
+  if (org.status !== "Approved") throw buildError("Organization must be approved first", 400);
+  const allowed = ["name", "description", "category", "address", "contactEmail"];
+  const unknown = assertOnlyKeys(payload, new Set(allowed));
+  if (unknown) throw buildError(unknown, 400);
+  org.set(payload);
+  await org.save();
+  return org.toObject();
+}
+
+async function getOrganizations() {
+  return Organization.find({}).sort({ createdAt: -1 }).lean();
+}
+
 module.exports = {
   register,
   login,
-    createOrganization
+  createOrganization,
+  reviewOrganization,
+  updateOrganization,
+  getOrganizations
 }
