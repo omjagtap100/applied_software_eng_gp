@@ -36,3 +36,16 @@ run().catch((error) => {
   console.error("MongoDB connection failed:", error);
   process.exit(1);
 });
+
+app.use("/", apiRouter);
+
+
+
+
+
+
+
+
+
+
+
