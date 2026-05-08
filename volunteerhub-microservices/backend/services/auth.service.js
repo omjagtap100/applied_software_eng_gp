@@ -92,12 +92,17 @@ async function updateOrganization(orgId, userId, payload) {
 async function getOrganizations() {
   return Organization.find({}).sort({ createdAt: -1 }).lean();
 }
-
+async function setUserActive(userId, isActive) {
+  const updated = await User.findByIdAndUpdate(userId, { isActive }, { new: true }).lean();
+  if (!updated) throw buildError("User not found", 404);
+  return updated;
+}
 module.exports = {
   register,
   login,
   createOrganization,
   reviewOrganization,
   updateOrganization,
-  getOrganizations
+  getOrganizations,
+  setUserActive
 }
