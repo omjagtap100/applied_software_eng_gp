@@ -52,3 +52,11 @@ exports.getOrganizations = async (_req, res, next) => {
     next(error);
   }
 };
+exports.setUserActive = async (req, res, next) => {
+  try {
+    const out = await authService.setUserActive(req.params.id, Boolean(req.body?.isActive));
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};
