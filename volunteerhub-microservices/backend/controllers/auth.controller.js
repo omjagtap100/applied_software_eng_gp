@@ -18,6 +18,14 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+exports.setUserActive = async (req, res, next) => {
+  try {
+    const out = await authService.setUserActive(req.params.id, Boolean(req.body?.isActive));
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};
 exports.createOrganization = async (req, res, next) => {
   try {
     const out = await authService.createOrganization(req.user.id, req.body || {});
@@ -47,14 +55,6 @@ exports.updateOrganization = async (req, res, next) => {
 exports.getOrganizations = async (_req, res, next) => {
   try {
     const out = await authService.getOrganizations();
-    res.json(out);
-  } catch (error) {
-    next(error);
-  }
-};
-exports.setUserActive = async (req, res, next) => {
-  try {
-    const out = await authService.setUserActive(req.params.id, Boolean(req.body?.isActive));
     res.json(out);
   } catch (error) {
     next(error);
