@@ -1,4 +1,7 @@
 backend/node_modules
+<<<<<<< HEAD
 backend/package-lock.json
 frontend/node_modules
 frontend/package-lock.json
+=======
+>>>>>>> c19f40c4a555ffc46d236544fb275233e078fbe0
