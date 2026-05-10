@@ -1,0 +1,70 @@
+
+const API_BASE_URL = window.__CONFIG__?.API_BASE_URL || "http://localhost:5000";
+const logBox = document.getElementById("logBox");
+const tabs = document.querySelectorAll(".tab");
+const tabContents = document.querySelectorAll(".tab-content");
+ 
+function log(message) {
+  const time = new Date().toLocaleTimeString();
+  logBox.textContent = `[${time}] ${message}\n` + logBox.textContent;
+}
+ 
+function decodeJwtPayload(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch (_e) {
+    return null;
+  }
+}
+ 
+async function api(path, method = "GET", body = null) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : null
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+  return data;
+}
+ 
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await api("/auth/register", "POST", {
+      name: document.getElementById("regName").value,
+      email: document.getElementById("regEmail").value,
+      password: document.getElementById("regPassword").value,
+      role: document.getElementById("regRole").value
+    });
+    log("Registration successful. Please log in.");
+    e.target.reset();
+  } catch (error) {
+    log(`Registration failed: ${error.message}`);
+  }
+});
+ 
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    const data = await api("/auth/login", "POST", {
+      email: document.getElementById("loginEmail").value,
+      password: document.getElementById("loginPassword").value
+    });
+    localStorage.setItem("vh_token", data.token);
+    localStorage.setItem("vh_user", JSON.stringify(decodeJwtPayload(data.token)));
+    window.location.href = "/dashboard";
+  } catch (error) {
+    log(`Login failed: ${error.message}`);
+  }
+});
+ 
+ 
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    tabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    const target = tab.dataset.tab;
+    tabContents.forEach((content) => content.classList.toggle("hidden", content.id !== target));
+  });
+});

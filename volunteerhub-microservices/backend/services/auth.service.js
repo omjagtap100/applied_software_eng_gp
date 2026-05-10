@@ -1,0 +1,109 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
+const Organization = require("../models/organization.model");
+const CREATE_KEYS = ["name", "email", "password", "role"];
+
+function buildError(message, statusCode) {
+  const err = new Error(message);
+  err.statusCode = statusCode;
+  return err;
+}
+
+function assertOnlyKeys(payload, allowed) {
+  if (!payload || typeof payload !== "object") return "Request body must be an object";
+  for (const key of Object.keys(payload)) {
+    if (!allowed.has(key)) return `Unknown field: ${key}`;
+  }
+  return null;
+}
+
+async function register(payload) {
+  const unknown = assertOnlyKeys(payload, new Set(CREATE_KEYS));
+  if (unknown) throw buildError(unknown, 400);
+
+  const { name, email, password, role } = payload;
+  if (!name || !email || !password || !role) {
+    throw buildError("name, email, password, role are required", 400);
+  }
+
+  const existing = await User.findOne({ email: String(email).toLowerCase() }).lean();
+  if (existing) throw buildError("Email already exists", 409);
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const user = await User.create({
+    name,
+    email: String(email).toLowerCase(),
+    passwordHash,
+    role
+  });
+  return { id: String(user._id), name: user.name, email: user.email, role: user.role };
+}
+
+async function login(payload, jwtSecret) {
+  const { email, password } = payload;
+  if (!email || !password) throw buildError("email and password are required", 400);
+
+  const user = await User.findOne({ email: String(email).toLowerCase() });
+  if (!user) throw buildError("Invalid credentials", 401);
+  if (!user.isActive) throw buildError("User account is deactivated", 403);
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) throw buildError("Invalid credentials", 401);
+
+  return jwt.sign(
+    {
+      id: String(user._id),
+      email: user.email,
+      role: user.role,
+      name: user.name
+    },
+    jwtSecret,
+    { expiresIn: "24h" }
+  );
+}
+async function setUserActive(userId, isActive) {
+  const updated = await User.findByIdAndUpdate(userId, { isActive }, { new: true }).lean();
+  if (!updated) throw buildError("User not found", 404);
+  return updated;
+}
+async function createOrganization(userId, payload) {
+  const { name, description, category, address, contactEmail } = payload;
+  if (!name || !description || !category || !address || !contactEmail) {
+    throw buildError("name, description, category, address, contactEmail are required", 400);
+  }
+  return Organization.create({ name, description, category, address, contactEmail, managerUserId: userId, status: "Pending" });
+}
+async function reviewOrganization(orgId, status) {
+  if (!["Approved", "Rejected"].includes(status)) throw buildError("status must be Approved or Rejected", 400);
+  const updated = await Organization.findByIdAndUpdate(orgId, { status }, { new: true }).lean();
+  if (!updated) throw buildError("Organization not found", 404);
+  return updated;
+}
+
+async function updateOrganization(orgId, userId, payload) {
+  const org = await Organization.findById(orgId);
+  if (!org) throw buildError("Organization not found", 404);
+  if (String(org.managerUserId) !== String(userId)) throw buildError("Forbidden for this organization", 403);
+  if (org.status !== "Approved") throw buildError("Organization must be approved first", 400);
+  const allowed = ["name", "description", "category", "address", "contactEmail"];
+  const unknown = assertOnlyKeys(payload, new Set(allowed));
+  if (unknown) throw buildError(unknown, 400);
+  org.set(payload);
+  await org.save();
+  return org.toObject();
+}
+
+async function getOrganizations() {
+  return Organization.find({}).sort({ createdAt: -1 }).lean();
+}
+
+module.exports = {
+  register,
+  login,
+  createOrganization,
+  reviewOrganization,
+  updateOrganization,
+  getOrganizations,
+  setUserActive
+}
