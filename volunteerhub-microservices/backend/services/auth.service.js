@@ -97,7 +97,11 @@ async function updateOrganization(orgId, userId, payload) {
 async function getOrganizations() {
   return Organization.find({}).sort({ createdAt: -1 }).lean();
 }
-
+async function getMyOrganization(user) {
+  if (!user || !user.id) throw buildError("Unauthorized", 401);
+  if (user.role !== "OrganisationManager") throw buildError("Only organisation managers can access this", 403);
+  return Organization.findOne({ managerUserId: user.id }).sort({ createdAt: -1 }).lean();
+}
 module.exports = {
   register,
   login,
@@ -105,5 +109,6 @@ module.exports = {
   reviewOrganization,
   updateOrganization,
   getOrganizations,
-  setUserActive
+  setUserActive,
+  getMyOrganization
 }

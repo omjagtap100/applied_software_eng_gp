@@ -25,6 +25,14 @@ app.get(["/", "/index.html"], async (_req, res, next) => {
     next(e);
   }
 });
+
+app.get(["/dashboard", "/dashboard.html"], async (_req, res, next) => {
+  try {
+    await sendPage(res, "dashboard.html");
+  } catch (e) {
+    next(e);
+  }
+});
  
 
  

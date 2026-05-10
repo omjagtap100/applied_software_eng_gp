@@ -14,6 +14,12 @@ authRouter.post(
   Controllers.authController.createOrganization
 );
 authRouter.get("/organizations", requireAuth, Controllers.authController.getOrganizations);
+authRouter.get(
+  "/organizations/me",
+  requireAuth,
+  requireRole(["OrganisationManager"]),
+  Controllers.authController.getMyOrganization
+);
 authRouter.patch(
   "/organizations/:id/review",
   requireAuth,

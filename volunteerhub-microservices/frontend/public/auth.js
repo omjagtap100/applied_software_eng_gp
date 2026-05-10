@@ -1,9 +1,7 @@
-
-const API_BASE_URL = window.__CONFIG__?.API_BASE_URL || "http://localhost:5000";
 const logBox = document.getElementById("logBox");
 const tabs = document.querySelectorAll(".tab");
 const tabContents = document.querySelectorAll(".tab-content");
- 
+const API_BASE_URL = window.__CONFIG__?.API_BASE_URL || "http://localhost:5000";
 function log(message) {
   const time = new Date().toLocaleTimeString();
   logBox.textContent = `[${time}] ${message}\n` + logBox.textContent;
@@ -68,3 +66,14 @@ tabs.forEach((tab) => {
     tabContents.forEach((content) => content.classList.toggle("hidden", content.id !== target));
   });
 });
+const clearLogBtn = document.getElementById("clearLogBtn");
+if (clearLogBtn) clearLogBtn.addEventListener("click", () => { logBox.textContent = ""; });
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("vh_token");
+    localStorage.removeItem("vh_user");
+    window.location.href = "/";
+  });
+}

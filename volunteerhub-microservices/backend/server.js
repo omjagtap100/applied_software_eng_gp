@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dns = require("node:dns");
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 const apiRouter = require("./routes");
 
 const app = express();

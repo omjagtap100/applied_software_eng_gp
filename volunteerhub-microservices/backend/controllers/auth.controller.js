@@ -60,3 +60,12 @@ exports.getOrganizations = async (_req, res, next) => {
     next(error);
   }
 };
+
+exports.getMyOrganization = async (req, res, next) => {
+  try {
+    const out = await authService.getMyOrganization(req.user);
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};
