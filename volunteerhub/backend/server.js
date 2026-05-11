@@ -43,7 +43,7 @@ app.use((err, _req, res, _next) => {
 async function run() {
   await mongoose.connect(mongoUri);
   app.listen(port, () => {
-    console.log(`Backend monolith listening on http://localhost:${port}`);
+    console.log(`Backend  listening on http://localhost:${port}`);
   });
 }
 
