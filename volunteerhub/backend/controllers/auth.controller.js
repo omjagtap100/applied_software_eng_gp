@@ -77,3 +77,11 @@ exports.updateProfile = async (req, res, next) => {
     next(error);
   }
 };
+exports.getProfile = async (req, res, next) => {
+  try {
+    const out = await authService.getProfile(req.user.id);
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};

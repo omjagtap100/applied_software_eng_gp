@@ -119,6 +119,14 @@ async function updateProfile(userId, payload) {
   if (!updated) throw buildError("User not found", 404);
   return updated;
 }
+async function getProfile(userId) {
+  const user = await User.findById(userId)
+    .select("_id name email role phone bio skills")
+    .lean();
+  if (!user) throw buildError("User not found", 404);
+  return user;
+}
+
 module.exports = {
   register,
   login,
@@ -128,5 +136,6 @@ module.exports = {
   getOrganizations,
   setUserActive,
   getMyOrganization,
-  updateProfile
+  updateProfile,
+  getProfile
 }

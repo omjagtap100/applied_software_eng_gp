@@ -8,6 +8,10 @@ const authRouter = express.Router();
 authRouter.post("/register", Controllers.authController.register);
 authRouter.post("/login", Controllers.authController.login);
 authRouter.patch("/profile", requireAuth, Controllers.authController.updateProfile);
+authRouter.get("/profile", requireAuth, Controllers.authController.getProfile);
+ 
+
+ 
 authRouter.post(
   "/organizations",
   requireAuth,
