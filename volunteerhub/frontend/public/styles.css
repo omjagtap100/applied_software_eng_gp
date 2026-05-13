@@ -190,6 +190,7 @@
    
   input,
   select,
+  textarea,
   button {
     width: 100%;
     border-radius: 10px;
@@ -199,9 +200,15 @@
   }
    
   input:focus,
-  select:focus {
+  select:focus,
+  textarea:focus {
     outline: 2px solid #cfdbff;
     border-color: #a7bcff;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 110px;
   }
    
   button {
@@ -348,6 +355,7 @@
    
     input,
     select,
+    textarea,
     button {
       padding: 9px 10px;
     }

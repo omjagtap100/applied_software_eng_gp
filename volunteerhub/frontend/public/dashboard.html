@@ -23,9 +23,34 @@
 
     <main class="shell layout">
       <section class="panel content-panel" style="grid-column: 1 / -1;">
+        
         <p class="subtext" style="margin-bottom: 16px;">
-          Sprint 1 scope: register/login, organisation registration (manager), and admin approval of organisations.
+          Current scope: register/login, profile management, organisation registration (manager), and admin approval of organisations.
         </p>
+
+        <div class="manager-panel">
+          <h3>My profile</h3>
+          <p class="subtext">Keep your personal details up to date for volunteering and organisation coordination.</p>
+          <form id="profileForm" class="manager-form">
+            <label for="profileName">Name</label>
+            <input type="text" id="profileName" placeholder="Full name" required />
+            <div class="row-2">
+              <div>
+                <label for="profileEmail">Email</label>
+                <input type="email" id="profileEmail" placeholder="Email" disabled />
+              </div>
+              <div>
+                <label for="profilePhone">Phone</label>
+                <input type="text" id="profilePhone" placeholder="Phone number" />
+              </div>
+            </div>
+            <label for="profileBio">Bio</label>
+            <textarea id="profileBio" rows="4" placeholder="Tell others a little about yourself"></textarea>
+            <label for="profileSkills">Skills</label>
+            <input type="text" id="profileSkills" placeholder="Comma-separated skills, e.g. First aid, Teamwork" />
+            <button type="submit" class="ghost">Save profile</button>
+          </form>
+        </div>
 
         <div id="volunteerPanel" class="manager-panel hidden">
           <h3>Volunteer</h3>

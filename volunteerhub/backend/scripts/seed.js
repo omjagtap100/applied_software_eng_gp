@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 const Organization = require("../models/organization.model");
-
+console.log(process.env.MONGO_URI);
 const MONGO_URI =
   process.env.MONGO_URI ||
   "mongodb+srv://omjagtap3304_db_user:bu24sMMXlXo5jO8G@cluster0.zyrfzy8.mongodb.net/volunteerhubdb";

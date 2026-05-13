@@ -1,6 +1,6 @@
 const API_BASE_URL = window.__CONFIG__?.API_BASE_URL || "http://localhost:5000";
 const authToken = localStorage.getItem("vh_token") || "";
-const authUser = JSON.parse(localStorage.getItem("vh_user") || "null");
+let authUser = JSON.parse(localStorage.getItem("vh_user") || "null");
 
 if (!authToken || !authUser) window.location.href = "/";
 
@@ -13,6 +13,12 @@ const volunteerPanel = document.getElementById("volunteerPanel");
 const adminPanel = document.getElementById("adminPanel");
 const adminDataList = document.getElementById("adminDataList");
 const clearLogBtn = document.getElementById("clearLogBtn");
+const profileForm = document.getElementById("profileForm");
+const profileNameInput = document.getElementById("profileName");
+const profileEmailInput = document.getElementById("profileEmail");
+const profilePhoneInput = document.getElementById("profilePhone");
+const profileBioInput = document.getElementById("profileBio");
+const profileSkillsInput = document.getElementById("profileSkills");
 const roleAliases = {
   organizationmanager: "OrganisationManager",
   organisationmanager: "OrganisationManager",
@@ -25,7 +31,9 @@ function normalizeRole(role) {
   return roleAliases[key] || role;
 }
 
-const userRole = normalizeRole(authUser?.role);
+function getUserRole() {
+  return normalizeRole(authUser?.role);
+}
 
 function log(message) {
   const time = new Date().toLocaleTimeString();
@@ -40,15 +48,59 @@ async function api(path, method = "GET", body = null) {
   return data;
 }
 
+function syncStoredUser(profile = {}) {
+  authUser = {
+    ...authUser,
+    ...(profile._id ? { id: profile._id } : {}),
+    ...(profile.name !== undefined ? { name: profile.name } : {}),
+    ...(profile.email !== undefined ? { email: profile.email } : {}),
+    ...(profile.role !== undefined ? { role: normalizeRole(profile.role) } : {})
+  };
+  localStorage.setItem("vh_user", JSON.stringify(authUser));
+  updateUserUI();
+}
+
+function skillsToInputValue(skills) {
+  if (Array.isArray(skills)) return skills.join(", ");
+  if (typeof skills === "string") return skills;
+  return "";
+}
+
+function parseSkills(value) {
+  return value
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function populateProfileForm(profile) {
+  profileNameInput.value = profile?.name || "";
+  profileEmailInput.value = profile?.email || "";
+  profilePhoneInput.value = profile?.phone || "";
+  profileBioInput.value = profile?.bio || "";
+  profileSkillsInput.value = skillsToInputValue(profile?.skills);
+}
+
 function updateUserUI() {
-  currentUserEl.textContent = `${authUser.name} (${authUser.role})`;
-  managerPanel.classList.toggle("hidden", authUser.role !== "OrganisationManager");
-  volunteerPanel.classList.toggle("hidden", authUser.role !== "Volunteer");
-  adminPanel.classList.toggle("hidden", authUser.role !== "Admin");
+  const role = getUserRole();
+  currentUserEl.textContent = `${authUser.name} (${role})`;
+  managerPanel.classList.toggle("hidden", role !== "OrganisationManager");
+  volunteerPanel.classList.toggle("hidden", role !== "Volunteer");
+  adminPanel.classList.toggle("hidden", role !== "Admin");
+}
+
+async function loadProfile() {
+  try {
+    const profile = await api("/auth/profile");
+    populateProfileForm(profile);
+    syncStoredUser(profile);
+  } catch (error) {
+    log(`Profile load failed: ${error.message}`);
+  }
 }
 
 async function loadManagerOrganizationStatus() {
-  if (authUser.role !== "OrganisationManager") return;
+  if (getUserRole() !== "OrganisationManager") return;
   try {
     const org = await api("/auth/organizations/me");
     if (!org) {
@@ -74,6 +126,24 @@ logoutBtn.addEventListener("click", () => {
   localStorage.removeItem("vh_token");
   localStorage.removeItem("vh_user");
   window.location.href = "/";
+});
+
+profileForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    const payload = {
+      name: profileNameInput.value.trim(),
+      phone: profilePhoneInput.value.trim(),
+      bio: profileBioInput.value.trim(),
+      skills: parseSkills(profileSkillsInput.value)
+    };
+    const updatedProfile = await api("/auth/profile", "PATCH", payload);
+    populateProfileForm(updatedProfile);
+    syncStoredUser(updatedProfile);
+    log("Profile updated successfully.");
+  } catch (error) {
+    log(`Profile update failed: ${error.message}`);
+  }
 });
 
 document.getElementById("orgForm").addEventListener("submit", async (e) => {
@@ -129,4 +199,5 @@ clearLogBtn.addEventListener("click", () => {
 });
 
 updateUserUI();
+loadProfile();
 loadManagerOrganizationStatus();
