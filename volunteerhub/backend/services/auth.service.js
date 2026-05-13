@@ -102,6 +102,23 @@ async function getMyOrganization(user) {
   if (user.role !== "OrganisationManager") throw buildError("Only organisation managers can access this", 403);
   return Organization.findOne({ managerUserId: user.id }).sort({ createdAt: -1 }).lean();
 }
+async function updateProfile(userId, payload) {
+  const allowed = ["name", "phone", "bio", "skills"];
+  const unknown = assertOnlyKeys(payload, new Set(allowed));
+  if (unknown) throw buildError(unknown, 400);
+  const updated = await User.findByIdAndUpdate(
+    userId,
+    {
+      ...(payload.name !== undefined ? { name: payload.name } : {}),
+      ...(payload.phone !== undefined ? { phone: payload.phone } : {}),
+      ...(payload.bio !== undefined ? { bio: payload.bio } : {}),
+      ...(payload.skills !== undefined ? { skills: payload.skills } : {})
+    },
+    { new: true }
+  ).lean();
+  if (!updated) throw buildError("User not found", 404);
+  return updated;
+}
 module.exports = {
   register,
   login,
@@ -110,5 +127,6 @@ module.exports = {
   updateOrganization,
   getOrganizations,
   setUserActive,
-  getMyOrganization
+  getMyOrganization,
+  updateProfile
 }

@@ -69,3 +69,11 @@ exports.getMyOrganization = async (req, res, next) => {
     next(error);
   }
 };
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const out = await authService.updateProfile(req.user.id, req.body || {});
+    res.json(out);
+  } catch (error) {
+    next(error);
+  }
+};

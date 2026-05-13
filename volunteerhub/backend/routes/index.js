@@ -7,6 +7,7 @@ const Controllers = require("../controllers");
 const authRouter = express.Router();
 authRouter.post("/register", Controllers.authController.register);
 authRouter.post("/login", Controllers.authController.login);
+authRouter.patch("/profile", requireAuth, Controllers.authController.updateProfile);
 authRouter.post(
   "/organizations",
   requireAuth,
