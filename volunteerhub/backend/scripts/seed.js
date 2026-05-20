@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 const Organization = require("../models/organization.model");
+const Event = require("../models/event.model");
 console.log(process.env.MONGO_URI);
 const MONGO_URI =
   process.env.MONGO_URI ||
@@ -13,6 +14,7 @@ async function run() {
   await mongoose.connect(MONGO_URI);
   console.log("Connected for seeding (Sprint 1)");
 
+  await Event.deleteMany({});
   await Organization.deleteMany({});
   await User.deleteMany({});
 
@@ -41,7 +43,7 @@ async function run() {
 
   const manager = users.find((u) => u.role === "OrganisationManager");
 
-  await Organization.create({
+  const org = await Organization.create({
     name: "Community Helpers",
     description: "Local community volunteer organization",
     category: "Community",
@@ -49,6 +51,34 @@ async function run() {
     contactEmail: "contact@communityhelpers.local",
     managerUserId: String(manager._id),
     status: "Approved"
+  });
+
+  await Event.create({
+    title: "Community Clean-up Day",
+    description: "Help clean parks and public spaces in the local area.",
+    date: "2026-06-15",
+    startTime: "09:00",
+    endTime: "13:00",
+    location: "Melbourne CBD",
+    category: "Environment",
+    maxVolunteers: 30,
+    roles: [
+      {
+        roleTitle: "General Volunteer",
+        description: "General clean-up support",
+        requiredSkills: ["Teamwork"],
+        capacity: 20
+      },
+      {
+        roleTitle: "Team Lead",
+        description: "Lead a small group",
+        requiredSkills: ["Leadership", "First aid"],
+        capacity: 5
+      }
+    ],
+    createdBy: String(manager._id),
+    organizationId: String(org._id),
+    status: "Published"
   });
 
   console.log("Seed completed.");
