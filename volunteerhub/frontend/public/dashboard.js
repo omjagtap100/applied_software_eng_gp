@@ -13,6 +13,12 @@ const volunteerPanel = document.getElementById("volunteerPanel");
 const adminPanel = document.getElementById("adminPanel");
 const adminDataList = document.getElementById("adminDataList");
 const clearLogBtn = document.getElementById("clearLogBtn");
+const eventsList = document.getElementById("eventsList");
+const refreshEventsBtn = document.getElementById("refreshEventsBtn");
+const createEventForm = document.getElementById("createEventForm");
+const createEventBtn = document.getElementById("createEventBtn");
+const editEventForm = document.getElementById("editEventForm");
+const cancelEditEventBtn = document.getElementById("cancelEditEventBtn");
 const profileForm = document.getElementById("profileForm");
 const profileNameInput = document.getElementById("profileName");
 const profileEmailInput = document.getElementById("profileEmail");
@@ -108,6 +114,7 @@ async function loadManagerOrganizationStatus() {
         <h4>No organisation linked</h4>
         <p class="meta">Register your organisation below. It stays <strong>Pending</strong> until an admin approves it.</p>
       `;
+      if (createEventBtn) createEventBtn.disabled = true;
       return;
     }
     managerOrgStatus.innerHTML = `
@@ -117,8 +124,82 @@ async function loadManagerOrganizationStatus() {
       <p class="meta"><strong>Category:</strong> ${org.category}</p>
       <p class="meta"><strong>Contact:</strong> ${org.contactEmail}</p>
     `;
+    if (createEventBtn) {
+      createEventBtn.disabled = org.status !== "Approved";
+      if (org.status !== "Approved") {
+        log(`Event creation disabled until organisation is Approved (current: ${org.status}).`);
+      }
+    }
   } catch (error) {
     managerOrgStatus.innerHTML = `<p class="meta">Could not load organisation: ${error.message}</p>`;
+    if (createEventBtn) createEventBtn.disabled = true;
+  }
+}
+
+function parseRolesJson(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return [{ roleTitle: "General Volunteer", description: "General support", requiredSkills: [], capacity: 10 }];
+  }
+  const parsed = JSON.parse(trimmed);
+  if (!Array.isArray(parsed)) throw new Error("Roles JSON must be an array");
+  return parsed;
+}
+
+function hideEditForm() {
+  editEventForm.classList.add("hidden");
+  editEventForm.reset();
+}
+
+function showEditForm(event) {
+  document.getElementById("editEventId").value = event._id;
+  document.getElementById("editEventTitle").value = event.title;
+  document.getElementById("editEventDescription").value = event.description;
+  document.getElementById("editEventDate").value = event.date;
+  document.getElementById("editEventStartTime").value = event.startTime;
+  document.getElementById("editEventEndTime").value = event.endTime;
+  document.getElementById("editEventLocation").value = event.location;
+  document.getElementById("editEventCategory").value = event.category;
+  document.getElementById("editEventMaxVolunteers").value = event.maxVolunteers;
+  editEventForm.classList.remove("hidden");
+}
+
+async function loadEvents() {
+  eventsList.innerHTML = "";
+  try {
+    const response = await api("/events?page=1&limit=20");
+    const events = Array.isArray(response) ? response : response.items || [];
+    if (!events.length) {
+      eventsList.innerHTML = "<p class='subtext'>No published events yet.</p>";
+      return;
+    }
+
+    const isManager = getUserRole() === "OrganisationManager";
+    const isAdmin = getUserRole() === "Admin";
+    const canManage = isManager || isAdmin;
+
+    eventsList.innerHTML = events
+      .map((event) => {
+        const manageActions = canManage
+          ? `<button class="ghost" data-action="editEvent" data-id="${event._id}">Edit</button>
+             <button class="ghost" data-action="cancelEvent" data-id="${event._id}">Cancel</button>`
+          : "";
+        return `<div class="event-card">
+          <h3>${event.title}</h3>
+          <p class="meta">${event.description}</p>
+          <p class="meta"><strong>Date:</strong> ${event.date} &nbsp; <strong>Time:</strong> ${event.startTime} - ${event.endTime}</p>
+          <p class="meta"><strong>Location:</strong> ${event.location} &nbsp; <strong>Category:</strong> ${event.category}</p>
+          <p class="meta"><strong>Max volunteers:</strong> ${event.maxVolunteers}</p>
+          <div class="actions">
+            <a href="/event?id=${event._id}" class="ghost" style="text-decoration:none;padding:7px 10px;">View details</a>
+            ${manageActions}
+          </div>
+        </div>`;
+      })
+      .join("");
+    log(`Loaded ${events.length} event(s).`);
+  } catch (error) {
+    log(`Load events failed: ${error.message}`);
   }
 }
 
@@ -198,6 +279,87 @@ clearLogBtn.addEventListener("click", () => {
   logBox.textContent = "";
 });
 
+if (createEventForm) {
+  createEventForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const roles = parseRolesJson(document.getElementById("eventRolesJson").value);
+      await api("/events", "POST", {
+        title: document.getElementById("eventTitle").value.trim(),
+        description: document.getElementById("eventDescription").value.trim(),
+        date: document.getElementById("eventDate").value,
+        startTime: document.getElementById("eventStartTime").value,
+        endTime: document.getElementById("eventEndTime").value,
+        location: document.getElementById("eventLocation").value.trim(),
+        category: document.getElementById("eventCategory").value.trim(),
+        maxVolunteers: Number(document.getElementById("eventMaxVolunteers").value),
+        roles
+      });
+      log("Event created.");
+      createEventForm.reset();
+      loadEvents();
+    } catch (error) {
+      log(`Create event failed: ${error.message}`);
+    }
+  });
+}
+
+if (editEventForm) {
+  editEventForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const eventId = document.getElementById("editEventId").value;
+    try {
+      await api(`/events/${eventId}`, "PUT", {
+        title: document.getElementById("editEventTitle").value.trim(),
+        description: document.getElementById("editEventDescription").value.trim(),
+        date: document.getElementById("editEventDate").value,
+        startTime: document.getElementById("editEventStartTime").value,
+        endTime: document.getElementById("editEventEndTime").value,
+        location: document.getElementById("editEventLocation").value.trim(),
+        category: document.getElementById("editEventCategory").value.trim(),
+        maxVolunteers: Number(document.getElementById("editEventMaxVolunteers").value)
+      });
+      log("Event updated.");
+      hideEditForm();
+      loadEvents();
+    } catch (error) {
+      log(`Edit event failed: ${error.message}`);
+    }
+  });
+}
+
+if (cancelEditEventBtn) {
+  cancelEditEventBtn.addEventListener("click", hideEditForm);
+}
+
+if (refreshEventsBtn) {
+  refreshEventsBtn.addEventListener("click", loadEvents);
+}
+
+eventsList.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const eventId = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (!eventId || !action) return;
+
+  try {
+    if (action === "cancelEvent") {
+      await api(`/events/${eventId}/cancel`, "PATCH", {});
+      log("Event cancelled; registered volunteers notified.");
+      hideEditForm();
+      loadEvents();
+    } else if (action === "editEvent") {
+      const event = await api(`/events/${eventId}`);
+      showEditForm(event);
+      log("Edit form opened.");
+    }
+  } catch (error) {
+    log(`Action failed: ${error.message}`);
+  }
+});
+
 updateUserUI();
 loadProfile();
 loadManagerOrganizationStatus();
+loadEvents();

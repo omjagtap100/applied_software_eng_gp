@@ -39,6 +39,29 @@ authRouter.put(
 );
 authRouter.patch("/users/:id/active", requireAuth, requireRole(["Admin"]), Controllers.authController.setUserActive);
 
+const eventsRouter = express.Router();
+eventsRouter.get("/", requireAuth, Controllers.eventController.getAllEvents);
+eventsRouter.get("/:id", requireAuth, Controllers.eventController.getEventById);
+eventsRouter.post(
+  "/",
+  requireAuth,
+  requireRole(["OrganisationManager", "Admin"]),
+  Controllers.eventController.createEvent
+);
+eventsRouter.put(
+  "/:id",
+  requireAuth,
+  requireRole(["OrganisationManager", "Admin"]),
+  Controllers.eventController.updateEvent
+);
+eventsRouter.patch(
+  "/:id/cancel",
+  requireAuth,
+  requireRole(["OrganisationManager", "Admin"]),
+  Controllers.eventController.cancelEvent
+);
+
 const apiRouter = express.Router();
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/events", eventsRouter);
 module.exports = apiRouter; 

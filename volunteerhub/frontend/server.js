@@ -33,6 +33,14 @@ app.get(["/dashboard", "/dashboard.html"], async (_req, res, next) => {
     next(e);
   }
 });
+
+app.get(["/event", "/event.html"], async (_req, res, next) => {
+  try {
+    await sendPage(res, "event.html");
+  } catch (e) {
+    next(e);
+  }
+});
  
 
  

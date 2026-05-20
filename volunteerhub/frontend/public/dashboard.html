@@ -25,8 +25,14 @@
       <section class="panel content-panel" style="grid-column: 1 / -1;">
         
         <p class="subtext" style="margin-bottom: 16px;">
-          Current scope: register/login, profile management, organisation registration (manager), and admin approval of organisations.
+          Sprint scope: auth, organisations, profiles, and events (create, edit, cancel, detail with role capacity).
         </p>
+
+        <div class="section-head">
+          <h2>Upcoming events</h2>
+          <button id="refreshEventsBtn" class="ghost" type="button">Refresh</button>
+        </div>
+        <div id="eventsList" class="event-grid" style="margin-bottom: 20px;"></div>
 
         <div class="manager-panel">
           <h3>My profile</h3>
@@ -54,12 +60,55 @@
 
         <div id="volunteerPanel" class="manager-panel hidden">
           <h3>Volunteer</h3>
-          <p class="subtext">You are signed in. Events and applications will be added in later sprints.</p>
+          <p class="subtext">Browse upcoming events above and open <strong>View details</strong> to see roles and remaining capacity </p>
         </div>
 
         <div id="managerPanel" class="manager-panel hidden">
           <h3>Organisation manager</h3>
           <div id="managerOrgStatus" class="event-card" style="margin-bottom:12px;"></div>
+
+          <form id="createEventForm" class="manager-form">
+            <h4>Create event </h4>
+            <input type="text" id="eventTitle" placeholder="Event title" required />
+            <input type="text" id="eventDescription" placeholder="Description" required />
+            <div class="row-2">
+              <input type="date" id="eventDate" required />
+              <input type="time" id="eventStartTime" required />
+            </div>
+            <div class="row-2">
+              <input type="time" id="eventEndTime" required />
+              <input type="text" id="eventLocation" placeholder="Location" required />
+            </div>
+            <div class="row-2">
+              <input type="text" id="eventCategory" placeholder="Category" required />
+              <input type="number" id="eventMaxVolunteers" placeholder="Max volunteers" required min="1" />
+            </div>
+            <label for="eventRolesJson">Roles JSON (optional)</label>
+            <textarea id="eventRolesJson" rows="3" placeholder='[{"roleTitle":"General Volunteer","description":"Help on the day","requiredSkills":["Teamwork"],"capacity":10}]'></textarea>
+            <button type="submit" class="ghost" id="createEventBtn">Create event</button>
+          </form>
+
+          <form id="editEventForm" class="manager-form hidden">
+            <h4>Edit event </h4>
+            <input type="hidden" id="editEventId" />
+            <input type="text" id="editEventTitle" placeholder="Event title" required />
+            <input type="text" id="editEventDescription" placeholder="Description" required />
+            <div class="row-2">
+              <input type="date" id="editEventDate" required />
+              <input type="time" id="editEventStartTime" required />
+            </div>
+            <div class="row-2">
+              <input type="time" id="editEventEndTime" required />
+              <input type="text" id="editEventLocation" placeholder="Location" required />
+            </div>
+            <div class="row-2">
+              <input type="text" id="editEventCategory" placeholder="Category" required />
+              <input type="number" id="editEventMaxVolunteers" placeholder="Max volunteers" required min="1" />
+            </div>
+            <button type="submit" class="ghost">Save changes</button>
+            <button type="button" id="cancelEditEventBtn" class="ghost">Cancel edit</button>
+          </form>
+
           <form id="orgForm" class="manager-form">
             <h4>Register organisation</h4>
             <input type="text" id="orgName" placeholder="Organisation name" required />

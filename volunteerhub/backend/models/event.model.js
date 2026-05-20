@@ -13,6 +13,7 @@ const eventSchema = new mongoose.Schema(
     roles: [
       {
         roleTitle: { type: String, required: true, trim: true },
+        description: { type: String, default: "", trim: true },
         requiredSkills: [{ type: String }],
         capacity: { type: Number, required: true, min: 1 }
       }
